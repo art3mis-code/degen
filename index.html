@@ -113,12 +113,17 @@ nav button.on{color:var(--ink);}
       <span class="vd" id="heroVd"></span>
     </div>
     <div class="blk">
-      <div class="cap">YOURS TO KEEP</div>
-      <div class="big" id="keepNum">$0</div>
+      <div class="cap">TO PULL OUT NOW</div>
+      <div class="big" id="pullNum">$0</div>
       <div class="jar">
         <span class="cap">TAX JAR</span>
         <b id="jarNum">$0</b>
-        <button id="jarBtn" onclick="moveJar()">MOVED IT ✓</button>
+        <button id="jarBtn" onclick="moveTax()">MOVED ✓</button>
+      </div>
+      <div class="jar">
+        <span class="cap">YOUR CUT</span>
+        <b id="cutNum">$0</b>
+        <button id="cutBtn" onclick="moveKeep()">MOVED ✓</button>
       </div>
     </div>
     <div class="rows">
@@ -126,13 +131,6 @@ nav button.on{color:var(--ink);}
       <div class="row"><span class="cap">MONEY OUT</span><b id="sumOut">$0</b></div>
       <div class="row"><span class="cap">KALSHI BALANCE</span><b id="sumBal">$0</b></div>
     </div>
-    <div class="cap" style="margin-bottom:8px">CASH-OUT PLAN</div>
-    <div class="rows" style="margin-bottom:8px">
-      <div class="row"><span class="cap">PULL FOR TAXES</span><b id="poTax">$0</b></div>
-      <div class="row"><span class="cap">PAY YOURSELF</span><span style="display:flex;align-items:center;gap:8px"><input type="number" inputmode="decimal" id="pocketIn" min="0" step="1" onchange="setPocket(this.value)" style="width:76px;background:#fff;border:1.5px solid var(--ink);border-radius:8px;padding:7px;font-size:15px;text-align:center;font-family:'Archivo',sans-serif"></span></div>
-      <div class="row"><span class="cap">LEAVE IN KALSHI</span><b id="poStay">$0</b></div>
-    </div>
-    <div class="note" id="poNote" style="margin-top:0"></div>
     <div class="cap" style="margin-bottom:8px">PROFIT OVER TIME</div>
     <div class="chart" id="chart"></div>
     <div class="chartx" id="chartX"></div>
@@ -140,6 +138,8 @@ nav button.on{color:var(--ink);}
 
   <div class="screen" id="scr-log">
     <div class="bigbtns">
+      <button id="tb-w" onclick="pickType('w')"><span>I WON A TRADE</span><span>↑</span></button>
+      <button id="tb-l" onclick="pickType('l')"><span>I LOST A TRADE</span><span>↓</span></button>
       <button id="tb-in" onclick="pickType('in')"><span>MONEY IN</span><span>+</span></button>
       <button id="tb-out" onclick="pickType('out')"><span>MONEY OUT</span><span>−</span></button>
       <button id="tb-bal" onclick="pickType('bal')"><span>BALANCE CHECK</span><span>=</span></button>
@@ -147,16 +147,22 @@ nav button.on{color:var(--ink);}
     <div class="form" id="logForm" style="display:none">
       <label id="amtLbl">Amount</label>
       <input type="number" inputmode="decimal" id="amt" placeholder="0.00" min="0" step="0.01">
+      <div id="nameWrap" style="display:none">
+        <label>What was the bet? (optional)</label>
+        <input type="text" id="tname" placeholder="e.g. Lakers win">
+      </div>
       <label>Date</label>
       <input type="date" id="dt">
       <button class="save" onclick="saveEntry()">SAVE</button>
+      <div class="note" id="splitNote" style="display:none; margin-bottom:0"></div>
     </div>
     <div class="hist" id="hist"></div>
   </div>
 
   <div class="screen" id="scr-more">
     <div class="mrow"><span class="cap">EXPORT SPREADSHEET (CSV)</span><button onclick="exportCsv()">EXPORT</button></div>
-    <div class="mrow"><span class="cap">TAX SET-ASIDE %</span><input type="number" inputmode="numeric" id="taxPct" min="0" max="60" step="1" onchange="setTaxPct(this.value)"></div>
+    <div class="mrow"><span class="cap">TAX % OF EACH WIN</span><input type="number" inputmode="numeric" id="taxPct" min="0" max="60" step="1" onchange="setTaxPct(this.value)"></div>
+    <div class="mrow"><span class="cap">YOUR % OF EACH WIN</span><input type="number" inputmode="numeric" id="keepPct" min="0" max="75" step="1" onchange="setKeepPct(this.value)"></div>
     <div class="mrow"><span class="cap" id="cloudLbl">CLOUD</span><button id="cloudBtn" onclick="cloudAction()">SIGN OUT</button></div>
     <div class="note">Tax jar is an <b>estimate, not tax advice</b>. Kalshi profits are taxable income even if you never get a tax form. Rules for prediction markets are still fuzzy (property vs gambling) and 2026 changed loss deductions — a tax pro can give you your real number. 25% is a safe starting point.</div>
     <div class="ver" id="ver"></div>
@@ -170,13 +176,13 @@ nav button.on{color:var(--ink);}
 </nav>
 
 <script>
-const VERSION='v1.2';
+const VERSION='v2.0';
 const SB_URL='https://kfxyakgzfppwivrblwmv.supabase.co';
 const SB_KEY='sb_publishable_MECWQl2dCrxyxEuRJTpH5Q_3Qq-O_Zu';
 const SHARED_EMAIL='degen@celine.app';
 const LS_DB='degen_db', LS_TOK='degen_tok', LS_LOCAL='degen_localonly', LS_GUIDE='degen_guide';
 
-let DB={entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0};
+let DB={entries:[],taxPct:25,taxMoved:0,keepPct:25,keepMoved:0,updated:0};
 let TF=0, PICKED=null, SESSION=null, snapTimer=null;
 
 function money(n){ const neg=n<0; const v=Math.abs(Math.round(n*100)/100); const s='$'+v.toLocaleString('en-US',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}); return neg?'-'+s:s; }
@@ -186,14 +192,15 @@ function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 function sortedEntries(){ return DB.entries.slice().sort((a,b)=> a.date===b.date ? (a.ts||0)-(b.ts||0) : (a.date<b.date?-1:1)); }
 
 function totals(upToDate){
-  let tin=0,tout=0,bal=null,balDate=null;
+  let tin=0,tout=0,bal=0,adj=0,seen=false;
   for(const e of sortedEntries()){
     if(upToDate && e.date>upToDate) continue;
-    if(e.type==='in') tin+=e.amt;
-    else if(e.type==='out') tout+=e.amt;
-    else if(e.type==='bal'){ bal=e.amt; balDate=e.date; }
+    if(e.type==='in'){ tin+=e.amt; adj+=e.amt; }
+    else if(e.type==='out'){ tout+=e.amt; adj-=e.amt; }
+    else if(e.type==='trade'){ adj+=e.amt; }
+    else if(e.type==='bal'){ bal=e.amt; adj=0; seen=true; }
   }
-  return {tin,tout,bal:bal===null?0:bal,balDate};
+  return {tin:r2(tin), tout:r2(tout), bal:r2(bal+adj)};
 }
 function equityAt(dateKey){ const t=totals(dateKey); return t.bal + t.tout - t.tin; }
 function allProfit(){ return equityAt(null); }
@@ -207,15 +214,20 @@ function profitWindow(days){
   const base = first>start ? 0 : equityAt(start);
   return {p:allProfit()-base, since: first>start?first:start};
 }
-function jarOwed(){ const p=allProfit(); return Math.max(0, Math.round(p*(DB.taxPct/100)*100)/100); }
-function payoutPlan(){
-  const bal=totals(null).bal;
-  const tax=Math.max(0, Math.round((jarOwed()-(DB.taxMoved||0))*100)/100);
-  const pocket=Math.min(Math.max(0,DB.pocket||0), Math.max(0, Math.round((bal-tax)*100)/100));
-  const stay=Math.max(0, Math.round((bal-tax-pocket)*100)/100);
-  return {tax,pocket,stay,bal};
+function r2(n){ return Math.round(n*100)/100; }
+function winSplit(amt){
+  const tax=r2(amt*(DB.taxPct/100));
+  const keep=r2(amt*(DB.keepPct/100));
+  return {tax, keep, stay:r2(amt-tax-keep)};
 }
-function setPocket(v){ DB.pocket=Math.max(0,Math.round((parseFloat(v)||0)*100)/100); persist(); renderHome(); }
+function cutTotals(){
+  let tax=0, keep=0;
+  for(const e of DB.entries){ if(e.type==='trade'&&e.amt>0){ const s=winSplit(e.amt); tax+=s.tax; keep+=s.keep; } }
+  return { taxOwed:Math.max(0,r2(tax-(DB.taxMoved||0))), keepOwed:Math.max(0,r2(keep-(DB.keepMoved||0))), tax:r2(tax), keep:r2(keep) };
+}
+function moveTax(){ const c=cutTotals(); if(c.taxOwed>0.004){ DB.taxMoved=c.tax; persist(); renderHome(); toast('TAX JAR SQUARED ✓'); } }
+function moveKeep(){ const c=cutTotals(); if(c.keepOwed>0.004){ DB.keepMoved=c.keep; persist(); renderHome(); toast('PAID YOURSELF ✓'); } }
+function setKeepPct(v){ const n=Math.max(0,Math.min(75,parseInt(v)||0)); DB.keepPct=n; persist(); renderHome(); }
 
 function renderHome(){
   const w=profitWindow(TF);
@@ -228,18 +240,14 @@ function renderHome(){
   document.getElementById('sumIn').textContent=money(t.tin);
   document.getElementById('sumOut').textContent=money(t.tout);
   document.getElementById('sumBal').textContent=money(t.bal);
-  const owed=jarOwed(), moved=DB.taxMoved||0, keep=Math.max(0,allProfit())-owed;
-  document.getElementById('keepNum').textContent=money(allProfit()>0?keep:Math.max(0,allProfit()));
-  const toMove=Math.max(0,Math.round((owed-moved)*100)/100);
-  document.getElementById('jarNum').textContent=money(owed);
+  const c=cutTotals();
+  document.getElementById('pullNum').textContent=money(r2(c.taxOwed+c.keepOwed));
+  document.getElementById('jarNum').textContent=money(c.taxOwed);
+  document.getElementById('cutNum').textContent=money(c.keepOwed);
   const jb=document.getElementById('jarBtn');
-  if(toMove>0.004){ jb.textContent='MOVE '+money(toMove)+' →'; jb.className=''; }
-  else { jb.textContent='ALL MOVED ✓'; jb.className='done'; }
-  const po=payoutPlan();
-  document.getElementById('poTax').textContent=money(po.tax);
-  document.getElementById('poStay').textContent=money(po.stay);
-  if(document.activeElement!==document.getElementById('pocketIn')) document.getElementById('pocketIn').value=po.pocket||'';
-  document.getElementById('poNote').textContent = po.bal<=0 ? 'Log a balance check and this plans your next withdrawal.' : 'Withdraw '+money(po.tax+po.pocket)+' total: '+money(po.tax)+' to the tax jar, '+money(po.pocket)+' is yours. The rest stays for trades.';
+  if(c.taxOwed>0.004){ jb.textContent='MOVED ✓'; jb.className=''; } else { jb.textContent='CLEAR ✓'; jb.className='done'; }
+  const cb=document.getElementById('cutBtn');
+  if(c.keepOwed>0.004){ cb.textContent='MOVED ✓'; cb.className=''; } else { cb.textContent='CLEAR ✓'; cb.className='done'; }
   renderChart();
   document.querySelectorAll('#tfBar button').forEach(b=>b.className = (+b.dataset.tf===TF)?'on':'');
 }
@@ -261,19 +269,28 @@ function renderChart(){
   }).join('');
   x.innerHTML=pts.map(p=>'<span>'+esc(p.d.slice(5).replace('-','/'))+'</span>').join('');
 }
-const TYPE_NAMES={in:'MONEY IN',out:'MONEY OUT',bal:'BALANCE CHECK'};
+const TYPE_NAMES={in:'MONEY IN',out:'MONEY OUT',bal:'BALANCE CHECK',trade:'TRADE'};
+function entryLabel(e){
+  if(e.type!=='trade') return TYPE_NAMES[e.type];
+  return (e.amt>0?'WIN':'LOSS')+(e.name?' · '+esc(e.name):'');
+}
 function renderHist(){
   const es=sortedEntries().slice().reverse();
   let html='', day='';
   for(const e of es){
     if(e.date!==day){ day=e.date; html+='<div class="h-day">'+esc(day)+'</div>'; }
-    const sign=e.type==='in'?'+':e.type==='out'?'−':'=';
-    html+='<div class="h-item"><span class="t">'+TYPE_NAMES[e.type]+'</span><span><b>'+sign+' '+money(e.amt)+'</b><button class="del" onclick="delEntry(\''+e.id+'\')">✕</button></span></div>';
+    const sign=e.type==='in'?'+':e.type==='out'?'−':e.type==='bal'?'=':(e.amt>0?'+':'');
+    html+='<div class="h-item"><span class="t">'+entryLabel(e)+'</span><span><b>'+sign+' '+money(e.amt)+'</b><button class="del" onclick="delEntry(\''+e.id+'\')">✕</button></span></div>';
+    if(e.type==='trade'&&e.amt>0){
+      const s=winSplit(e.amt);
+      html+='<div class="note" style="margin:2px 2px 8px">↳ pull '+money(s.tax)+' tax + '+money(s.keep)+' yours · leave '+money(s.stay)+'</div>';
+    }
   }
   document.getElementById('hist').innerHTML = html || '<div class="note">Nothing logged yet. Tap a button above.</div>';
 }
 function renderMore(){
   document.getElementById('taxPct').value=DB.taxPct;
+  document.getElementById('keepPct').value=DB.keepPct;
   document.getElementById('ver').textContent='DEGEN '+VERSION;
   const local=localStorage.getItem(LS_LOCAL)==='1';
   document.getElementById('cloudLbl').textContent = local?'CLOUD · OFF (LOCAL ONLY)':'CLOUD · ON';
@@ -288,40 +305,63 @@ function show(name){
   });
 }
 function setTf(d){ TF=d; renderHome(); }
+const AMT_LABELS={w:'How much did you win? (profit only)',l:'How much did you lose?',bal:'Current Kalshi balance',in:'Amount',out:'Amount'};
 function pickType(t){
   PICKED=t;
-  ['in','out','bal'].forEach(k=>document.getElementById('tb-'+k).className=k===t?'sel':'');
+  ['w','l','in','out','bal'].forEach(k=>document.getElementById('tb-'+k).className=k===t?'sel':'');
   document.getElementById('logForm').style.display='block';
-  document.getElementById('amtLbl').textContent = t==='bal'?'Current Kalshi balance':'Amount';
+  document.getElementById('amtLbl').textContent=AMT_LABELS[t];
+  document.getElementById('nameWrap').style.display=(t==='w'||t==='l')?'block':'none';
+  document.getElementById('splitNote').style.display='none';
   document.getElementById('dt').value=todayKey();
   document.getElementById('amt').value='';
+  document.getElementById('tname').value='';
   document.getElementById('amt').focus();
 }
 function saveEntry(){
   const amt=parseFloat(document.getElementById('amt').value);
   const date=document.getElementById('dt').value||todayKey();
   if(!PICKED||isNaN(amt)||amt<0){ toast('ENTER AN AMOUNT'); return; }
-  DB.entries.push({id:String(Date.now())+Math.random().toString(36).slice(2,6), type:PICKED, amt:Math.round(amt*100)/100, date, ts:Date.now()});
+  const isTrade=PICKED==='w'||PICKED==='l';
+  const e={id:String(Date.now())+Math.random().toString(36).slice(2,6), type:isTrade?'trade':PICKED, amt:r2(PICKED==='l'?-amt:amt), date, ts:Date.now()};
+  const nm=document.getElementById('tname').value.trim();
+  if(isTrade&&nm) e.name=nm.slice(0,60);
+  DB.entries.push(e);
   document.getElementById('logForm').style.display='none';
-  ['in','out','bal'].forEach(k=>document.getElementById('tb-'+k).className='');
+  ['w','l','in','out','bal'].forEach(k=>document.getElementById('tb-'+k).className='');
+  const sn=document.getElementById('splitNote');
+  if(PICKED==='w'){
+    const s=winSplit(e.amt);
+    sn.innerHTML='<b>PULL OUT '+money(r2(s.tax+s.keep))+':</b> '+money(s.tax)+' tax jar + '+money(s.keep)+' yours. Leave '+money(s.stay)+' in Kalshi.';
+    sn.style.display='block';
+    document.getElementById('logForm').style.display='block';
+    toast('W ✓ PULL OUT '+money(r2(s.tax+s.keep)));
+  } else toast('SAVED ✓');
   PICKED=null;
-  persist(); renderAll(); toast('SAVED ✓');
+  persist(); renderAll();
 }
 function delEntry(id){ DB.entries=DB.entries.filter(e=>e.id!==id); persist(); renderAll(); }
 function moveJar(){ const owed=jarOwed(); if(owed-(DB.taxMoved||0)>0.004){ DB.taxMoved=owed; persist(); renderHome(); toast('TAX JAR SQUARED ✓'); } }
 function setTaxPct(v){ const n=Math.max(0,Math.min(60,parseInt(v)||0)); DB.taxPct=n; persist(); renderHome(); }
 
 function exportCsv(){
-  let tin=0,tout=0,bal='';
-  const lines=[['Date','Type','Amount','Total in','Total out','Kalshi balance','Profit so far'].join(',')];
+  const lines=[['Date','Type','Bet','Amount','Pull for tax','Pull for you','Leave in'].join(',')];
   for(const e of sortedEntries()){
-    if(e.type==='in') tin+=e.amt; else if(e.type==='out') tout+=e.amt; else bal=e.amt;
-    const profit = bal===''?'':(Math.round((bal+tout-tin)*100)/100);
-    lines.push([e.date, TYPE_NAMES[e.type], e.amt, Math.round(tin*100)/100, Math.round(tout*100)/100, bal, profit].join(','));
+    let tax='',keep='',stay='';
+    if(e.type==='trade'&&e.amt>0){ const s=winSplit(e.amt); tax=s.tax; keep=s.keep; stay=s.stay; }
+    const label=e.type==='trade'?(e.amt>0?'Win':'Loss'):TYPE_NAMES[e.type];
+    lines.push([e.date, label, '"'+String(e.name||'').replace(/"/g,"'")+'"', e.amt, tax, keep, stay].join(','));
   }
+  const c=cutTotals(), t=totals(null);
   lines.push('');
-  lines.push('Tax set-aside %,'+DB.taxPct);
-  lines.push('Tax jar (estimate),'+jarOwed());
+  lines.push('All-time profit,'+r2(allProfit()));
+  lines.push('Money in,'+t.tin);
+  lines.push('Money out,'+t.tout);
+  lines.push('Kalshi balance (est),'+t.bal);
+  lines.push('Tax % of each win,'+DB.taxPct);
+  lines.push('Your % of each win,'+DB.keepPct);
+  lines.push('Tax jar owed now (estimate),'+c.taxOwed);
+  lines.push('Your cut owed now,'+c.keepOwed);
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -357,7 +397,7 @@ const SEED=[
  {id:'s11',type:'in', amt:17.64, date:'2026-06-16',ts:11},
  {id:'s12',type:'bal',amt:77.18, date:'2026-07-12',ts:12}
 ];
-function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0},d); } else { DB.entries=SEED.slice(); localStorage.setItem(LS_DB,JSON.stringify(DB)); } }catch(e){} }
+function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,keepPct:25,keepMoved:0,updated:0},d); } else { DB.entries=SEED.slice(); localStorage.setItem(LS_DB,JSON.stringify(DB)); } }catch(e){} }
 function persist(){
   DB.updated=Date.now();
   localStorage.setItem(LS_DB,JSON.stringify(DB));
@@ -414,7 +454,7 @@ async function pullCloud(){
     if(!r.ok) return;
     const rows=await r.json();
     if(rows.length && rows[0].data && (rows[0].updated||0)>(DB.updated||0)){
-      DB=Object.assign({entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0},rows[0].data);
+      DB=Object.assign({entries:[],taxPct:25,taxMoved:0,keepPct:25,keepMoved:0,updated:0},rows[0].data);
       localStorage.setItem(LS_DB,JSON.stringify(DB));
     } else if(DB.entries.length){ pushCloud(); }
   }catch(e){}
