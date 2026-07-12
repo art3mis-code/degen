@@ -126,6 +126,13 @@ nav button.on{color:var(--ink);}
       <div class="row"><span class="cap">MONEY OUT</span><b id="sumOut">$0</b></div>
       <div class="row"><span class="cap">KALSHI BALANCE</span><b id="sumBal">$0</b></div>
     </div>
+    <div class="cap" style="margin-bottom:8px">CASH-OUT PLAN</div>
+    <div class="rows" style="margin-bottom:8px">
+      <div class="row"><span class="cap">PULL FOR TAXES</span><b id="poTax">$0</b></div>
+      <div class="row"><span class="cap">PAY YOURSELF</span><span style="display:flex;align-items:center;gap:8px"><input type="number" inputmode="decimal" id="pocketIn" min="0" step="1" onchange="setPocket(this.value)" style="width:76px;background:#fff;border:1.5px solid var(--ink);border-radius:8px;padding:7px;font-size:15px;text-align:center;font-family:'Archivo',sans-serif"></span></div>
+      <div class="row"><span class="cap">LEAVE IN KALSHI</span><b id="poStay">$0</b></div>
+    </div>
+    <div class="note" id="poNote" style="margin-top:0"></div>
     <div class="cap" style="margin-bottom:8px">PROFIT OVER TIME</div>
     <div class="chart" id="chart"></div>
     <div class="chartx" id="chartX"></div>
@@ -163,13 +170,13 @@ nav button.on{color:var(--ink);}
 </nav>
 
 <script>
-const VERSION='v1.0';
+const VERSION='v1.1';
 const SB_URL='https://kfxyakgzfppwivrblwmv.supabase.co';
 const SB_KEY='sb_publishable_MECWQl2dCrxyxEuRJTpH5Q_3Qq-O_Zu';
 const SHARED_EMAIL='degen@celine.app';
 const LS_DB='degen_db', LS_TOK='degen_tok', LS_LOCAL='degen_localonly', LS_GUIDE='degen_guide';
 
-let DB={entries:[],taxPct:25,taxMoved:0,updated:0};
+let DB={entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0};
 let TF=0, PICKED=null, SESSION=null, snapTimer=null;
 
 function money(n){ const neg=n<0; const v=Math.abs(Math.round(n*100)/100); const s='$'+v.toLocaleString('en-US',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}); return neg?'-'+s:s; }
@@ -201,6 +208,14 @@ function profitWindow(days){
   return {p:allProfit()-base, since: first>start?first:start};
 }
 function jarOwed(){ const p=allProfit(); return Math.max(0, Math.round(p*(DB.taxPct/100)*100)/100); }
+function payoutPlan(){
+  const bal=totals(null).bal;
+  const tax=Math.max(0, Math.round((jarOwed()-(DB.taxMoved||0))*100)/100);
+  const pocket=Math.min(Math.max(0,DB.pocket||0), Math.max(0, Math.round((bal-tax)*100)/100));
+  const stay=Math.max(0, Math.round((bal-tax-pocket)*100)/100);
+  return {tax,pocket,stay,bal};
+}
+function setPocket(v){ DB.pocket=Math.max(0,Math.round((parseFloat(v)||0)*100)/100); persist(); renderHome(); }
 
 function renderHome(){
   const w=profitWindow(TF);
@@ -220,6 +235,11 @@ function renderHome(){
   const jb=document.getElementById('jarBtn');
   if(toMove>0.004){ jb.textContent='MOVE '+money(toMove)+' →'; jb.className=''; }
   else { jb.textContent='ALL MOVED ✓'; jb.className='done'; }
+  const po=payoutPlan();
+  document.getElementById('poTax').textContent=money(po.tax);
+  document.getElementById('poStay').textContent=money(po.stay);
+  if(document.activeElement!==document.getElementById('pocketIn')) document.getElementById('pocketIn').value=po.pocket||'';
+  document.getElementById('poNote').textContent = po.bal<=0 ? 'Log a balance check and this plans your next withdrawal.' : 'Withdraw '+money(po.tax+po.pocket)+' total: '+money(po.tax)+' to the tax jar, '+money(po.pocket)+' is yours. The rest stays for trades.';
   renderChart();
   document.querySelectorAll('#tfBar button').forEach(b=>b.className = (+b.dataset.tf===TF)?'on':'');
 }
@@ -323,7 +343,7 @@ function dismissGuide(){ localStorage.setItem(LS_GUIDE,'done'); renderGuide(); }
 
 function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.style.display='block'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display='none',1800); }
 
-function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,updated:0},d); } }catch(e){} }
+function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0},d); } }catch(e){} }
 function persist(){
   DB.updated=Date.now();
   localStorage.setItem(LS_DB,JSON.stringify(DB));
@@ -380,7 +400,7 @@ async function pullCloud(){
     if(!r.ok) return;
     const rows=await r.json();
     if(rows.length && rows[0].data && (rows[0].updated||0)>(DB.updated||0)){
-      DB=Object.assign({entries:[],taxPct:25,taxMoved:0,updated:0},rows[0].data);
+      DB=Object.assign({entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0},rows[0].data);
       localStorage.setItem(LS_DB,JSON.stringify(DB));
     } else if(DB.entries.length){ pushCloud(); }
   }catch(e){}
