@@ -170,7 +170,7 @@ nav button.on{color:var(--ink);}
 </nav>
 
 <script>
-const VERSION='v1.1';
+const VERSION='v1.2';
 const SB_URL='https://kfxyakgzfppwivrblwmv.supabase.co';
 const SB_KEY='sb_publishable_MECWQl2dCrxyxEuRJTpH5Q_3Qq-O_Zu';
 const SHARED_EMAIL='degen@celine.app';
@@ -343,7 +343,21 @@ function dismissGuide(){ localStorage.setItem(LS_GUIDE,'done'); renderGuide(); }
 
 function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.style.display='block'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display='none',1800); }
 
-function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0},d); } }catch(e){} }
+const SEED=[
+ {id:'s01',type:'in', amt:19.60, date:'2025-04-13',ts:1},
+ {id:'s02',type:'in', amt:30.92, date:'2025-07-01',ts:2},
+ {id:'s03',type:'in', amt:49.00, date:'2025-11-29',ts:3},
+ {id:'s04',type:'in', amt:49.00, date:'2025-11-29',ts:4},
+ {id:'s05',type:'in', amt:49.00, date:'2025-11-29',ts:5},
+ {id:'s06',type:'in', amt:16.66, date:'2026-03-14',ts:6},
+ {id:'s07',type:'in', amt:21.00, date:'2026-04-14',ts:7},
+ {id:'s08',type:'in', amt:19.60, date:'2026-04-14',ts:8},
+ {id:'s09',type:'out',amt:100.00,date:'2026-04-14',ts:9},
+ {id:'s10',type:'in', amt:13.18, date:'2026-06-02',ts:10},
+ {id:'s11',type:'in', amt:17.64, date:'2026-06-16',ts:11},
+ {id:'s12',type:'bal',amt:77.18, date:'2026-07-12',ts:12}
+];
+function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,pocket:0,updated:0},d); } else { DB.entries=SEED.slice(); localStorage.setItem(LS_DB,JSON.stringify(DB)); } }catch(e){} }
 function persist(){
   DB.updated=Date.now();
   localStorage.setItem(LS_DB,JSON.stringify(DB));
