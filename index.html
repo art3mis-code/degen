@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DEGEN</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F2F0">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700&family=Archivo+Expanded:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{ --bg:#F2F2F0; --ink:#111; --mid:#777; --line:#ccc; --card:#111; }
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:'Archivo',system-ui,sans-serif; padding-bottom:calc(76px + env(safe-area-inset-bottom));}
+.wrap{max-width:480px; margin:0 auto; padding:18px 20px 0;}
+.cap{font-size:11px; letter-spacing:2px; color:var(--mid); text-transform:uppercase;}
+.xp{font-family:'Archivo Expanded','Archivo',sans-serif;}
+header{display:flex; justify-content:space-between; align-items:baseline; padding:16px 0 20px;}
+header .logo{font-family:'Archivo Expanded',sans-serif; font-weight:700; font-size:15px; letter-spacing:3px;}
+.guide{background:#111; color:#fff; font-size:12.5px; letter-spacing:.5px; padding:12px 16px; border-radius:14px; margin-bottom:16px; display:flex; gap:10px; align-items:center; justify-content:space-between;}
+.guide button{background:none; border:1px solid #555; color:#ccc; border-radius:999px; font-size:10px; letter-spacing:1px; padding:4px 10px; font-family:inherit;}
+.tf{display:flex; gap:6px; margin-bottom:18px;}
+.tf button{flex:1; background:none; border:1.5px solid var(--ink); color:var(--ink); font-family:'Archivo Expanded',sans-serif; font-weight:600; font-size:11px; letter-spacing:1.5px; padding:9px 0; border-radius:999px;}
+.tf button.on{background:var(--ink); color:#fff;}
+.hero{margin-bottom:24px;}
+.hero .num{font-weight:300; font-size:54px; line-height:1; letter-spacing:-1px;}
+.hero .vd{font-family:'Archivo Expanded',sans-serif; font-weight:600; font-size:12px; letter-spacing:1.5px; margin-left:6px;}
+.blk{background:var(--card); color:#fff; border-radius:20px; padding:18px 20px; margin-bottom:16px;}
+.blk .cap{color:#999;}
+.blk .big{font-weight:500; font-size:30px; margin-top:4px;}
+.jar{border-top:1px solid #333; margin-top:14px; padding-top:12px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+.jar b{font-size:15px; font-weight:500;}
+.jar button{background:none; border:1px solid #555; color:#ccc; border-radius:999px; font-size:10px; letter-spacing:1px; padding:5px 11px; font-family:inherit;}
+.jar button.done{border-color:#2c2; color:#6e6;}
+.rows{border-top:2px solid var(--ink); margin-bottom:20px;}
+.row{display:flex; justify-content:space-between; align-items:center; padding:13px 2px; border-bottom:1px solid var(--line);}
+.row:last-child{border-bottom:none;}
+.row .cap{font-size:12px; letter-spacing:1.5px; color:#555;}
+.row b{font-size:14px; font-weight:500;}
+.chart{display:flex; align-items:flex-end; gap:9px; height:64px; margin:4px 2px 6px;}
+.chart div{flex:1; background:var(--ink); border-radius:2px; min-height:3px;}
+.chart div.dn{background:#c9c9c5;}
+.chartx{display:flex; gap:9px; font-size:9.5px; color:#999; letter-spacing:.5px; padding:0 2px; margin-bottom:20px;}
+.chartx span{flex:1; text-align:center;}
+.screen{display:none;}
+.bigbtns{display:flex; flex-direction:column; gap:10px; margin-bottom:22px;}
+.bigbtns button{background:none; border:2px solid var(--ink); color:var(--ink); font-family:'Archivo Expanded',sans-serif; font-weight:600; font-size:13px; letter-spacing:2px; padding:16px; border-radius:16px; text-align:left; display:flex; justify-content:space-between;}
+.bigbtns button.sel{background:var(--ink); color:#fff;}
+.form{border:2px solid var(--ink); border-radius:16px; padding:16px; margin-bottom:22px;}
+.form label{display:block; font-size:11px; letter-spacing:2px; color:var(--mid); margin:10px 0 5px; text-transform:uppercase;}
+.form input{width:100%; min-width:0; background:#fff; border:1.5px solid var(--ink); border-radius:10px; padding:12px; font-size:17px; font-family:'Archivo',sans-serif; color:var(--ink);}
+.form .save{width:100%; margin-top:14px; background:var(--ink); color:#fff; border:none; border-radius:12px; padding:15px; font-family:'Archivo Expanded',sans-serif; font-weight:600; font-size:13px; letter-spacing:2px;}
+.hist .h-day{font-size:11px; letter-spacing:2px; color:var(--mid); margin:16px 0 4px; text-transform:uppercase;}
+.h-item{display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-bottom:1px solid var(--line);}
+.h-item .t{font-size:12px; letter-spacing:1.5px; color:#555; text-transform:uppercase;}
+.h-item b{font-size:14px; font-weight:500;}
+.h-item .del{background:none; border:none; color:#bbb; font-size:16px; padding:4px 8px;}
+.mrow{display:flex; justify-content:space-between; align-items:center; padding:15px 2px; border-bottom:1px solid var(--line); gap:10px;}
+.mrow .cap{font-size:12px; letter-spacing:1.5px; color:#555;}
+.mrow button{background:none; border:1.5px solid var(--ink); color:var(--ink); border-radius:999px; font-size:11px; letter-spacing:1px; padding:7px 14px; font-family:'Archivo Expanded',sans-serif; font-weight:600;}
+.mrow input{width:64px; background:#fff; border:1.5px solid var(--ink); border-radius:8px; padding:8px; font-size:15px; text-align:center; font-family:'Archivo',sans-serif;}
+.note{font-size:11.5px; color:var(--mid); line-height:1.6; margin:14px 2px;}
+nav{position:fixed; bottom:0; left:0; right:0; background:var(--bg); border-top:2px solid var(--ink); display:flex; padding-bottom:env(safe-area-inset-bottom);}
+nav button{flex:1; background:none; border:none; color:var(--mid); font-family:'Archivo Expanded',sans-serif; font-weight:600; font-size:11px; letter-spacing:2px; padding:16px 0;}
+nav button.on{color:var(--ink);}
+.auth{position:fixed; inset:0; background:var(--bg); z-index:50; display:flex; align-items:center; justify-content:center; padding:24px;}
+.auth .box{width:100%; max-width:340px;}
+.auth .logo{font-family:'Archivo Expanded',sans-serif; font-weight:700; font-size:22px; letter-spacing:5px; margin-bottom:6px;}
+.auth input{width:100%; background:#fff; border:2px solid var(--ink); border-radius:12px; padding:14px; font-size:17px; margin:14px 0 10px; font-family:'Archivo',sans-serif;}
+.auth .go{width:100%; background:var(--ink); color:#fff; border:none; border-radius:12px; padding:15px; font-family:'Archivo Expanded',sans-serif; font-weight:600; font-size:13px; letter-spacing:2px;}
+.auth .local{width:100%; background:none; border:none; color:var(--mid); font-size:12px; letter-spacing:1px; margin-top:14px; text-decoration:underline; font-family:inherit;}
+.auth .err{color:#c22; font-size:12.5px; min-height:18px; margin-top:8px;}
+.toast{position:fixed; top:14px; left:50%; transform:translateX(-50%); background:#111; color:#fff; font-size:12.5px; letter-spacing:1px; padding:10px 18px; border-radius:999px; z-index:60; display:none;}
+.ver{text-align:center; font-size:10px; color:#bbb; letter-spacing:1px; padding:18px 0 8px;}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="auth" id="authScreen">
+  <div class="box">
+    <div class="logo">DEGEN</div>
+    <div class="cap">Kalshi profit tracker</div>
+    <input type="password" id="authPw" placeholder="Password" autocomplete="current-password">
+    <button class="go" onclick="doAuth()">UNLOCK</button>
+    <div class="err" id="authErr"></div>
+    <button class="local" onclick="useLocal()">use on this device only</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <span class="logo">DEGEN</span>
+    <span class="cap" id="hdrDate"></span>
+  </header>
+
+  <div class="guide" id="guideBar" style="display:none">
+    <span id="guideTxt"></span>
+    <button onclick="dismissGuide()">GOT IT</button>
+  </div>
+
+  <div class="screen" id="scr-home">
+    <div class="tf" id="tfBar">
+      <button data-tf="7" onclick="setTf(7)">7D</button>
+      <button data-tf="30" onclick="setTf(30)">30D</button>
+      <button data-tf="0" class="on" onclick="setTf(0)">ALL</button>
+    </div>
+    <div class="cap" id="heroLbl">ALL-TIME PROFIT</div>
+    <div class="hero">
+      <span class="num" id="heroNum">$0</span>
+      <span class="vd" id="heroVd"></span>
+    </div>
+    <div class="blk">
+      <div class="cap">YOURS TO KEEP</div>
+      <div class="big" id="keepNum">$0</div>
+      <div class="jar">
+        <span class="cap">TAX JAR</span>
+        <b id="jarNum">$0</b>
+        <button id="jarBtn" onclick="moveJar()">MOVED IT ✓</button>
+      </div>
+    </div>
+    <div class="rows">
+      <div class="row"><span class="cap">MONEY IN</span><b id="sumIn">$0</b></div>
+      <div class="row"><span class="cap">MONEY OUT</span><b id="sumOut">$0</b></div>
+      <div class="row"><span class="cap">KALSHI BALANCE</span><b id="sumBal">$0</b></div>
+    </div>
+    <div class="cap" style="margin-bottom:8px">PROFIT OVER TIME</div>
+    <div class="chart" id="chart"></div>
+    <div class="chartx" id="chartX"></div>
+  </div>
+
+  <div class="screen" id="scr-log">
+    <div class="bigbtns">
+      <button id="tb-in" onclick="pickType('in')"><span>MONEY IN</span><span>+</span></button>
+      <button id="tb-out" onclick="pickType('out')"><span>MONEY OUT</span><span>−</span></button>
+      <button id="tb-bal" onclick="pickType('bal')"><span>BALANCE CHECK</span><span>=</span></button>
+    </div>
+    <div class="form" id="logForm" style="display:none">
+      <label id="amtLbl">Amount</label>
+      <input type="number" inputmode="decimal" id="amt" placeholder="0.00" min="0" step="0.01">
+      <label>Date</label>
+      <input type="date" id="dt">
+      <button class="save" onclick="saveEntry()">SAVE</button>
+    </div>
+    <div class="hist" id="hist"></div>
+  </div>
+
+  <div class="screen" id="scr-more">
+    <div class="mrow"><span class="cap">EXPORT SPREADSHEET (CSV)</span><button onclick="exportCsv()">EXPORT</button></div>
+    <div class="mrow"><span class="cap">TAX SET-ASIDE %</span><input type="number" inputmode="numeric" id="taxPct" min="0" max="60" step="1" onchange="setTaxPct(this.value)"></div>
+    <div class="mrow"><span class="cap" id="cloudLbl">CLOUD</span><button id="cloudBtn" onclick="cloudAction()">SIGN OUT</button></div>
+    <div class="note">Tax jar is an <b>estimate, not tax advice</b>. Kalshi profits are taxable income even if you never get a tax form. Rules for prediction markets are still fuzzy (property vs gambling) and 2026 changed loss deductions — a tax pro can give you your real number. 25% is a safe starting point.</div>
+    <div class="ver" id="ver"></div>
+  </div>
+</div>
+
+<nav>
+  <button id="nb-home" class="on" onclick="show('home')">HOME</button>
+  <button id="nb-log" onclick="show('log')">LOG</button>
+  <button id="nb-more" onclick="show('more')">MORE</button>
+</nav>
+
+<script>
+const VERSION='v1.0';
+const SB_URL='https://kfxyakgzfppwivrblwmv.supabase.co';
+const SB_KEY='sb_publishable_MECWQl2dCrxyxEuRJTpH5Q_3Qq-O_Zu';
+const SHARED_EMAIL='degen@celine.app';
+const LS_DB='degen_db', LS_TOK='degen_tok', LS_LOCAL='degen_localonly', LS_GUIDE='degen_guide';
+
+let DB={entries:[],taxPct:25,taxMoved:0,updated:0};
+let TF=0, PICKED=null, SESSION=null, snapTimer=null;
+
+function money(n){ const neg=n<0; const v=Math.abs(Math.round(n*100)/100); const s='$'+v.toLocaleString('en-US',{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}); return neg?'-'+s:s; }
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function sortedEntries(){ return DB.entries.slice().sort((a,b)=> a.date===b.date ? (a.ts||0)-(b.ts||0) : (a.date<b.date?-1:1)); }
+
+function totals(upToDate){
+  let tin=0,tout=0,bal=null,balDate=null;
+  for(const e of sortedEntries()){
+    if(upToDate && e.date>upToDate) continue;
+    if(e.type==='in') tin+=e.amt;
+    else if(e.type==='out') tout+=e.amt;
+    else if(e.type==='bal'){ bal=e.amt; balDate=e.date; }
+  }
+  return {tin,tout,bal:bal===null?0:bal,balDate};
+}
+function equityAt(dateKey){ const t=totals(dateKey); return t.bal + t.tout - t.tin; }
+function allProfit(){ return equityAt(null); }
+function profitWindow(days){
+  if(!days) return {p:allProfit(),since:null};
+  const d=new Date(); d.setDate(d.getDate()-days);
+  const start=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const es=sortedEntries();
+  if(!es.length) return {p:0,since:null};
+  const first=es[0].date;
+  const base = first>start ? 0 : equityAt(start);
+  return {p:allProfit()-base, since: first>start?first:start};
+}
+function jarOwed(){ const p=allProfit(); return Math.max(0, Math.round(p*(DB.taxPct/100)*100)/100); }
+
+function renderHome(){
+  const w=profitWindow(TF);
+  const p=Math.round(w.p*100)/100;
+  const el=document.getElementById('heroNum');
+  el.textContent=(p>0?'+':'')+money(p);
+  document.getElementById('heroVd').textContent = p>0?"YOU'RE UP ↑" : p<0?"YOU'RE DOWN ↓" : 'EVEN';
+  document.getElementById('heroLbl').textContent = TF===0?'ALL-TIME PROFIT':'PROFIT · LAST '+TF+' DAYS';
+  const t=totals(null);
+  document.getElementById('sumIn').textContent=money(t.tin);
+  document.getElementById('sumOut').textContent=money(t.tout);
+  document.getElementById('sumBal').textContent=money(t.bal);
+  const owed=jarOwed(), moved=DB.taxMoved||0, keep=Math.max(0,allProfit())-owed;
+  document.getElementById('keepNum').textContent=money(allProfit()>0?keep:Math.max(0,allProfit()));
+  const toMove=Math.max(0,Math.round((owed-moved)*100)/100);
+  document.getElementById('jarNum').textContent=money(owed);
+  const jb=document.getElementById('jarBtn');
+  if(toMove>0.004){ jb.textContent='MOVE '+money(toMove)+' →'; jb.className=''; }
+  else { jb.textContent='ALL MOVED ✓'; jb.className='done'; }
+  renderChart();
+  document.querySelectorAll('#tfBar button').forEach(b=>b.className = (+b.dataset.tf===TF)?'on':'');
+}
+function chartPoints(){
+  const es=sortedEntries().filter(e=>e.type==='bal');
+  return es.slice(-8).map(e=>({d:e.date, v:equityAt(e.date)}));
+}
+function renderChart(){
+  const pts=chartPoints();
+  const c=document.getElementById('chart'), x=document.getElementById('chartX');
+  if(!pts.length){ c.innerHTML='<div class="dn" style="height:3px"></div>'; x.innerHTML='<span>LOG A BALANCE CHECK TO SEE YOUR CURVE</span>'; return; }
+  const vals=pts.map(p=>p.v);
+  const mx=Math.max(...vals,0.01), mn=Math.min(...vals,0);
+  const rng=mx-mn||1;
+  c.innerHTML=pts.map((p,i)=>{
+    const h=Math.max(4,Math.round(((p.v-mn)/rng)*60));
+    const dn=i>0 && p.v<pts[i-1].v;
+    return '<div class="'+(dn?'dn':'')+'" style="height:'+h+'px"></div>';
+  }).join('');
+  x.innerHTML=pts.map(p=>'<span>'+esc(p.d.slice(5).replace('-','/'))+'</span>').join('');
+}
+const TYPE_NAMES={in:'MONEY IN',out:'MONEY OUT',bal:'BALANCE CHECK'};
+function renderHist(){
+  const es=sortedEntries().slice().reverse();
+  let html='', day='';
+  for(const e of es){
+    if(e.date!==day){ day=e.date; html+='<div class="h-day">'+esc(day)+'</div>'; }
+    const sign=e.type==='in'?'+':e.type==='out'?'−':'=';
+    html+='<div class="h-item"><span class="t">'+TYPE_NAMES[e.type]+'</span><span><b>'+sign+' '+money(e.amt)+'</b><button class="del" onclick="delEntry(\''+e.id+'\')">✕</button></span></div>';
+  }
+  document.getElementById('hist').innerHTML = html || '<div class="note">Nothing logged yet. Tap a button above.</div>';
+}
+function renderMore(){
+  document.getElementById('taxPct').value=DB.taxPct;
+  document.getElementById('ver').textContent='DEGEN '+VERSION;
+  const local=localStorage.getItem(LS_LOCAL)==='1';
+  document.getElementById('cloudLbl').textContent = local?'CLOUD · OFF (LOCAL ONLY)':'CLOUD · ON';
+  document.getElementById('cloudBtn').textContent = local?'TURN ON':'SIGN OUT';
+}
+function renderAll(){ renderHome(); renderHist(); renderMore(); renderGuide(); }
+
+function show(name){
+  ['home','log','more'].forEach(s=>{
+    document.getElementById('scr-'+s).style.display = s===name?'block':'none';
+    document.getElementById('nb-'+s).className = s===name?'on':'';
+  });
+}
+function setTf(d){ TF=d; renderHome(); }
+function pickType(t){
+  PICKED=t;
+  ['in','out','bal'].forEach(k=>document.getElementById('tb-'+k).className=k===t?'sel':'');
+  document.getElementById('logForm').style.display='block';
+  document.getElementById('amtLbl').textContent = t==='bal'?'Current Kalshi balance':'Amount';
+  document.getElementById('dt').value=todayKey();
+  document.getElementById('amt').value='';
+  document.getElementById('amt').focus();
+}
+function saveEntry(){
+  const amt=parseFloat(document.getElementById('amt').value);
+  const date=document.getElementById('dt').value||todayKey();
+  if(!PICKED||isNaN(amt)||amt<0){ toast('ENTER AN AMOUNT'); return; }
+  DB.entries.push({id:String(Date.now())+Math.random().toString(36).slice(2,6), type:PICKED, amt:Math.round(amt*100)/100, date, ts:Date.now()});
+  document.getElementById('logForm').style.display='none';
+  ['in','out','bal'].forEach(k=>document.getElementById('tb-'+k).className='');
+  PICKED=null;
+  persist(); renderAll(); toast('SAVED ✓');
+}
+function delEntry(id){ DB.entries=DB.entries.filter(e=>e.id!==id); persist(); renderAll(); }
+function moveJar(){ const owed=jarOwed(); if(owed-(DB.taxMoved||0)>0.004){ DB.taxMoved=owed; persist(); renderHome(); toast('TAX JAR SQUARED ✓'); } }
+function setTaxPct(v){ const n=Math.max(0,Math.min(60,parseInt(v)||0)); DB.taxPct=n; persist(); renderHome(); }
+
+function exportCsv(){
+  let tin=0,tout=0,bal='';
+  const lines=[['Date','Type','Amount','Total in','Total out','Kalshi balance','Profit so far'].join(',')];
+  for(const e of sortedEntries()){
+    if(e.type==='in') tin+=e.amt; else if(e.type==='out') tout+=e.amt; else bal=e.amt;
+    const profit = bal===''?'':(Math.round((bal+tout-tin)*100)/100);
+    lines.push([e.date, TYPE_NAMES[e.type], e.amt, Math.round(tin*100)/100, Math.round(tout*100)/100, bal, profit].join(','));
+  }
+  lines.push('');
+  lines.push('Tax set-aside %,'+DB.taxPct);
+  lines.push('Tax jar (estimate),'+jarOwed());
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='degen-'+todayKey()+'.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('CSV EXPORTED ✓');
+}
+
+function renderGuide(){
+  const g=document.getElementById('guideBar');
+  if(localStorage.getItem(LS_GUIDE)==='done'){ g.style.display='none'; return; }
+  let msg=null;
+  if(!DB.entries.some(e=>e.type==='in')) msg='Start on LOG → MONEY IN: add what you’ve put into Kalshi.';
+  else if(!DB.entries.some(e=>e.type==='bal')) msg='Now LOG → BALANCE CHECK: type what your Kalshi balance is right now.';
+  if(msg){ g.style.display='flex'; document.getElementById('guideTxt').textContent=msg; }
+  else g.style.display='none';
+}
+function dismissGuide(){ localStorage.setItem(LS_GUIDE,'done'); renderGuide(); }
+
+function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.style.display='block'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display='none',1800); }
+
+function loadLocal(){ try{ const raw=localStorage.getItem(LS_DB); if(raw){ const d=JSON.parse(raw); if(d&&d.entries) DB=Object.assign({entries:[],taxPct:25,taxMoved:0,updated:0},d); } }catch(e){} }
+function persist(){
+  DB.updated=Date.now();
+  localStorage.setItem(LS_DB,JSON.stringify(DB));
+  if(SESSION) { pushCloud(); queueSnap(); }
+}
+
+async function sbFetch(path,opts){
+  opts=opts||{};
+  opts.headers=Object.assign({'apikey':SB_KEY,'Content-Type':'application/json'},opts.headers||{});
+  if(SESSION) opts.headers['Authorization']='Bearer '+SESSION.access_token;
+  const r=await fetch(SB_URL+path,opts);
+  return r;
+}
+function jwtSub(tok){ try{ return JSON.parse(atob(tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub; }catch(e){ return null; } }
+
+async function doAuth(){
+  const pw=document.getElementById('authPw').value;
+  const err=document.getElementById('authErr');
+  if(!pw){ err.textContent='Type the password.'; return; }
+  err.textContent='';
+  let r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:SHARED_EMAIL,password:pw})});
+  if(r.status===400){
+    const r2=await fetch(SB_URL+'/auth/v1/signup',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:SHARED_EMAIL,password:pw})});
+    if(r2.ok){ r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:SHARED_EMAIL,password:pw})}); }
+    else { err.textContent='Wrong password.'; return; }
+  }
+  if(!r.ok){ err.textContent='Wrong password.'; return; }
+  SESSION=await r.json();
+  localStorage.setItem(LS_TOK,JSON.stringify(SESSION));
+  localStorage.removeItem(LS_LOCAL);
+  document.getElementById('authScreen').style.display='none';
+  await pullCloud(); renderAll();
+}
+function useLocal(){ localStorage.setItem(LS_LOCAL,'1'); document.getElementById('authScreen').style.display='none'; renderAll(); }
+function cloudAction(){
+  if(localStorage.getItem(LS_LOCAL)==='1'){ localStorage.removeItem(LS_LOCAL); location.reload(); }
+  else { localStorage.removeItem(LS_TOK); SESSION=null; location.reload(); }
+}
+async function refreshSession(){
+  try{
+    const raw=localStorage.getItem(LS_TOK); if(!raw) return false;
+    const old=JSON.parse(raw);
+    const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:old.refresh_token})});
+    if(!r.ok) return false;
+    SESSION=await r.json();
+    localStorage.setItem(LS_TOK,JSON.stringify(SESSION));
+    return true;
+  }catch(e){ return false; }
+}
+async function pullCloud(){
+  try{
+    const uid=jwtSub(SESSION.access_token);
+    const r=await sbFetch('/rest/v1/degen?user_id=eq.'+uid+'&select=data,updated');
+    if(!r.ok) return;
+    const rows=await r.json();
+    if(rows.length && rows[0].data && (rows[0].updated||0)>(DB.updated||0)){
+      DB=Object.assign({entries:[],taxPct:25,taxMoved:0,updated:0},rows[0].data);
+      localStorage.setItem(LS_DB,JSON.stringify(DB));
+    } else if(DB.entries.length){ pushCloud(); }
+  }catch(e){}
+}
+async function pushCloud(){
+  try{
+    const uid=jwtSub(SESSION.access_token);
+    await sbFetch('/rest/v1/degen',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates'},body:JSON.stringify({user_id:uid,data:DB,updated:DB.updated})});
+  }catch(e){}
+}
+function queueSnap(){
+  clearTimeout(snapTimer);
+  snapTimer=setTimeout(async ()=>{
+    try{
+      const uid=jwtSub(SESSION.access_token);
+      await sbFetch('/rest/v1/degen_snap',{method:'POST',body:JSON.stringify({user_id:uid,data:DB})});
+      const r=await sbFetch('/rest/v1/degen_snap?user_id=eq.'+uid+'&select=id&order=at.desc&offset=30');
+      if(r.ok){ const old=await r.json(); if(old.length){ await sbFetch('/rest/v1/degen_snap?id=in.('+old.map(o=>o.id).join(',')+')',{method:'DELETE'}); } }
+    }catch(e){}
+  },4000);
+}
+
+async function boot(){
+  document.getElementById('hdrDate').textContent=new Date().toDateString().toUpperCase().replace(/^(\w+) (\w+) (\d+) (\d+)$/,'$1 $3 $2').toUpperCase();
+  loadLocal();
+  show('home');
+  if(localStorage.getItem(LS_LOCAL)==='1'){ document.getElementById('authScreen').style.display='none'; }
+  else if(await refreshSession()){ document.getElementById('authScreen').style.display='none'; await pullCloud(); }
+  renderAll();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+}
+if(typeof window!=='undefined' && typeof document!=='undefined' && document.getElementById('hdrDate')) boot();
+</script>
+</body>
+</html>
