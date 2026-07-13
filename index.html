@@ -113,7 +113,7 @@ nav button.on{color:var(--ink);}
       <span class="vd" id="heroVd"></span>
     </div>
     <div class="blk">
-      <div class="cap">TO PULL OUT NOW</div>
+      <div class="cap">TAKE OUT (TOTAL)</div>
       <div class="big" id="pullNum">$0</div>
       <div class="jar">
         <span class="cap">TAX JAR</span>
@@ -176,7 +176,7 @@ nav button.on{color:var(--ink);}
 </nav>
 
 <script>
-const VERSION='v2.1';
+const VERSION='v2.2';
 const SB_URL='https://kfxyakgzfppwivrblwmv.supabase.co';
 const SB_KEY='sb_publishable_MECWQl2dCrxyxEuRJTpH5Q_3Qq-O_Zu';
 const SHARED_EMAIL='degen@celine.app';
@@ -283,7 +283,7 @@ function renderHist(){
     html+='<div class="h-item"><span class="t">'+entryLabel(e)+'</span><span><b>'+sign+' '+money(e.amt)+'</b><button class="del" onclick="delEntry(\''+e.id+'\')">✕</button></span></div>';
     if(e.type==='trade'&&e.amt>0){
       const s=winSplit(e.amt);
-      html+='<div class="note" style="margin:2px 2px 8px">↳ pull '+money(s.tax)+' tax + '+money(s.keep)+' yours · leave '+money(s.stay)+'</div>';
+      html+='<div class="note" style="margin:2px 2px 8px">↳ take out '+money(r2(s.tax+s.keep))+' (tax '+money(s.tax)+' · yours '+money(s.keep)+')</div>';
     }
   }
   document.getElementById('hist').innerHTML = html || '<div class="note">Nothing logged yet. Tap a button above.</div>';
@@ -332,10 +332,17 @@ function saveEntry(){
   const sn=document.getElementById('splitNote');
   if(PICKED==='w'){
     const s=winSplit(e.amt);
-    sn.innerHTML='<b>PULL OUT '+money(r2(s.tax+s.keep))+':</b> '+money(s.tax)+' tax jar + '+money(s.keep)+' yours. Leave '+money(s.stay)+' in Kalshi.';
+    sn.innerHTML='<div style="border:2px solid #111;border-radius:12px;padding:14px;text-align:center;color:#111">'
+      +'<div style="font-size:11px;letter-spacing:2px;color:#777">DO ONE THING</div>'
+      +'<div style="font-family:\'Archivo Expanded\',sans-serif;font-weight:600;font-size:22px;margin:6px 0">TAKE OUT '+money(r2(s.tax+s.keep))+'</div>'
+      +'<div style="display:flex;gap:8px;justify-content:center">'
+      +'<span style="background:#111;color:#fff;border-radius:999px;padding:6px 12px;font-size:12px;letter-spacing:1px">TAX '+money(s.tax)+'</span>'
+      +'<span style="border:1.5px solid #111;border-radius:999px;padding:6px 12px;font-size:12px;letter-spacing:1px">YOURS '+money(s.keep)+'</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#777;margin-top:8px">that\'s it — don\'t touch the rest</div></div>';
     sn.style.display='block';
     document.getElementById('logForm').style.display='block';
-    toast('W ✓ PULL OUT '+money(r2(s.tax+s.keep)));
+    toast('W ✓ TAKE OUT '+money(r2(s.tax+s.keep)));
   } else toast('SAVED ✓');
   PICKED=null;
   persist(); renderAll();
